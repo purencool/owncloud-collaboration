@@ -21,29 +21,21 @@
 
 	print_unescaped($this->inc('tabs'));
 ?>
-
 <div id="app-content">
+	<div id="content-header" >
+		<h1 id="title" ><?php p($_['title']); ?></h1>
 	<?php
 		if(isset($_['project_details']))
 			$pid = $_['project_details']['pid'];
 		else
 			$pid = -1;
 	?>
-
-	<h1 id="title">
-		<?php p($_['title']); ?>
-	</h1>
-
+</div>
+<div id="content-body" >
 	<form action="<?php print_unescaped(OCP\Util::linkToRoute('collaboration_route', array('rel_path' => 'submit_update_project')));?>" method="post" id="project_updation_form">
-
-		<?php
-			if($pid != -1)
-			{
-		?>
-		<input type="hidden" name="pid" id="pid" value="<?php p($pid); ?>" />
-		<?php
-			}
-		?>
+		<?php	if($pid != -1) { ?>
+		  <input type="hidden" name="pid" id="pid" value="<?php p($pid); ?>" />
+		<?php } ?>
 
 		<table>
 			<tr>
@@ -56,16 +48,10 @@
 					<span id="error_msg" class="error" ></span>
 				</td>
 			</tr>
-
 			<tr>
 				<td>
 					<?php p($l->t('Description')); ?>
 				</td>
-
-				<td>
-					:
-				</td>
-
 				<td>
 					<textarea maxlength="3000" name="description" ><?php if($pid != -1) p($_['project_details']['description']); ?></textarea>
 				</td>
@@ -79,10 +65,6 @@
 				</td>
 
 				<td>
-					:
-				</td>
-
-				<td>
 					<?php print("&nbsp;" . OC_User::getDisplayName() . "&nbsp;(" . OC_User::getUser() . ")"); ?>
 				</td>
 			</tr>
@@ -91,23 +73,16 @@
 			<tr>
 				<td>
 					<?php p($l->t('Deadline')); ?>
-				</td>
-
-				<td>
-					: <span class="required">*</span>
+					<span class="required">*</span>
 				</td>
 
 				<td>
 					<input type="text" id="deadline" name="deadline" placeholder="MM/DD/YYYY" <?php if($pid != -1) print_unescaped('value="'.OC_Collaboration_Time::convertDBTimeToUIDate($_['project_details']['ending_date']).'"'); ?> autocomplete="off" required/>
-					<?php
-						if($pid != -1)
-						{
-					?>
+					<?php	if($pid != -1) { ?>
 					<label for="project_completed" ><?php p($l->t('Completed?')); ?></label>
-					<input type="checkbox" name="project_completed" id="project_completed" <?php if(($_['project_details']['completed']) == true) p('checked="checked"'); ?>" />
-					<?php
-						}
-					?>
+					<input type="checkbox" name="project_completed" id="project_completed"
+					  <?php if(($_['project_details']['completed']) == true) { echo "checked=checked"; } ?>/>
+					<?php } ?>
 				</td>
 			</tr>
 
@@ -115,11 +90,6 @@
 				<td>
 					<?php p($l->t('Members')); ?>
 				</td>
-
-				<td>
-					:
-				</td>
-
 				<td id="remove_old_member_loading_img" >
 				</td>
 			</tr>
@@ -127,32 +97,22 @@
 		</table>
 
 		<?php
-			if($pid != -1)
-			{
+			if($pid != -1) {
 				$member_role = OC_Collaboration_Project::getMembers($pid);
-
 				print_unescaped('<span class="old_mem_list" >');
 
-				foreach($member_role as $role => $members)
-				{
+				foreach($member_role as $role => $members) {
 					print_unescaped('<div class="old_members" data-role="' . $role . '" ><div class="old_mem_role" >' . $role . ': </div>');
 
-					if(strcasecmp($role, 'Creator') == 0)
-					{
+					if(strcasecmp($role, 'Creator') == 0)	{
 						print_unescaped('<span>' . $members[0] . '</span>');
-					}
-					else
-					{
-
-						foreach($members as $index => $member)
-						{
+					} else {
+						foreach($members as $index => $member){
 							print_unescaped('<span>' . $member . ' <img src="' . OCP\Util::linkTo('core', 'img/actions/delete.png') . '" class="delete_old_member" data-member="' . $member . '" title="' . $l->t('Delete') . '" /><br /></span>');
 						}
 					}
-
 					print_unescaped('</div>');
 				}
-
 				print_unescaped('</span>');
 			}
 		?>
