@@ -40,6 +40,11 @@
 	border:1px solid #ccc;
 }
 
+.unit ol
+{
+list-style-position: inside;
+}
+
 @media only screen and (min-width: 640px)
 {
   .unit {

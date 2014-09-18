@@ -388,6 +388,7 @@ class OC_Collaboration_Task
 		return true;
 	}
 
+
 	/**
 	 * @brief Fetches the list of tasks
 	 * @param Filters based on project, status and the member assigned
@@ -403,9 +404,9 @@ class OC_Collaboration_Task
 			$assigned_to = NULL;
 			$assigned_by = NULL;
 
-			if(isset($args['project']) && !is_null($args['project']))
+			if(isset($args['tasks_by_project']) && !is_null($args['tasks_by_project']))
 			{
-				$project = $args['project'];
+				$project = $args['tasks_by_project'];
 			}
 
 			if(isset($args['status']) && !is_null($args['status']))
@@ -423,40 +424,33 @@ class OC_Collaboration_Task
 				$assigned_by = $args['assigned_by'];
 			}
 
-			$sql = 	'SELECT `task`.`tid`, `task`.`title` AS title, `project`.`title` AS proj_title, `task`.`description`, `creator`,
-				`task`.`pid`, `priority`, `ending_time`, `status`, `member`, `last_updated_time`, `reason`
-					FROM `*PREFIX*collaboration_task` AS task, `*PREFIX*collaboration_task_status` AS tstatus,
-					`*PREFIX*collaboration_project` AS project
-				     WHERE `task`.`tid`=`tstatus`.`tid`
-			  	   AND `task`.`pid`=`project`.`pid`
-						 AND `project`.`completed`= false
-	           AND `tstatus`.`last_updated_time`=
-						 (SELECT MAX(`last_updated_time`)
-						 FROM `*PREFIX*collaboration_task_status`
-						 WHERE `tid`=`task`.`tid`)
-				     ORDER BY `ending_time` ASC
-				     LIMIT ' . $start . ', ' . $count;
-				/*
-						$sql = 	'SELECT `task`.`tid`, `task`.`title` AS title, `project`.`title` AS proj_title, `task`.`description`, `creator`,
-							`task`.`pid`, `priority`, `ending_time`, `status`, `member`, `last_updated_time`, `reason`
-								FROM `*PREFIX*collaboration_task` AS task, `*PREFIX*collaboration_task_status` AS tstatus,
-								`*PREFIX*collaboration_project` AS project
-									WHERE `task`.`tid`=`tstatus`.`tid`
-									AND `task`.`pid`=`project`.`pid`
-									AND `project`.`completed`= false
-									AND (' .
+
+
+			$sql = 	'SELECT `task`.`tid`, `task`.`title` AS title,
+			        `project`.`title` AS proj_title,
+							`task`.`description`, `creator`,	`task`.`pid`,
+							`priority`, `ending_time`, `status`, `member`,
+							`last_updated_time`, `reason`
+							FROM `*PREFIX*collaboration_task` AS task,
+							     `*PREFIX*collaboration_task_status` AS tstatus,
+							     `*PREFIX*collaboration_project` AS project
+							WHERE `task`.`tid`=`tstatus`.`tid`
+							AND `task`.`pid`=`project`.`pid`
+							AND `project`.`completed`= false
+							AND (' .
 									((is_null($assigned_by))? '': '`task`.`creator`=?') .
 									((!is_null($assigned_by) && !is_null($assigned_to))? ' OR ': '') .
 									((is_null($assigned_to))? '': '`tstatus`.`member`=?') . ')' .
-									((is_null($project))? '': ' AND `project`.`title`=?') .
+									((is_null($project))? '': ' AND `project`.`pid`=?') .
 									((is_null($status))? '': ' AND `tstatus`.`status`=?') .
-									' AND `tstatus`.`last_updated_time`=
-									(SELECT MAX(`last_updated_time`)
-									FROM `*PREFIX*collaboration_task_status`
-									WHERE `tid`=`task`.`tid`)
-									ORDER BY `ending_time` ASC
-									LIMIT ' . $start . ', ' . $count;
-*/
+							' AND `tstatus`.`last_updated_time`= (SELECT MAX(`last_updated_time`)
+							FROM `*PREFIX*collaboration_task_status`
+							WHERE `tid`=`task`.`tid`)
+							ORDER BY `ending_time` ASC
+							LIMIT ' . $start . ', ' . $count;
+
+			//print $sql;
+
 			$query = \OCP\DB::prepare($sql);
 
 			$params = array();
@@ -721,6 +715,28 @@ class OC_Collaboration_Task
 		}
 	}
 
+
+	public static function defaultReadTask()
+	{
+		return 'SELECT `task`.`tid`, `project`.`title` AS proj_title,
+		       `task`.`pid`,  `task`.`title`, `task`.`description`,
+				   `priority`, `ending_time`,  `status`, `member`, `task`.`creator`
+					 FROM `*PREFIX*collaboration_task` AS task,
+											`*PREFIX*collaboration_project` AS project,
+											`*PREFIX*collaboration_task_status` AS tstatus
+					 WHERE `task`.`pid`=`project`.`pid`
+					 AND `task`.`tid`=`tstatus`.`tid`
+					 AND `task`.`tid`=?
+					 AND `tstatus`.`last_updated_time`=
+					 (SELECT MAX(`last_updated_time`)
+					 FROM `*PREFIX*collaboration_task_status`
+					 WHERE `tid`=`task`.`tid`)';
+	}
+
+
+
+
+
 	/**
 	 * @brief Provides the details about the task
 	 * @param Task ID
@@ -728,20 +744,11 @@ class OC_Collaboration_Task
 	 */
 	public static function readTask($tid)
 	{
+
 		try
 		{
-			$query = OCP\DB::prepare('SELECT `task`.`tid`, `project`.`title` AS proj_title, `task`.`pid`, `task`.`title`, `task`.`description`,
-									 `priority`, `ending_time`, `status`, `member`, `task`.`creator`
-									 FROM `*PREFIX*collaboration_task` AS task,
-									      `*PREFIX*collaboration_project` AS project,
-									      `*PREFIX*collaboration_task_status` AS tstatus
-									 WHERE `task`.`pid`=`project`.`pid`
-									 AND `task`.`tid`=`tstatus`.`tid`
-									 AND `task`.`tid`=?
-									 AND `tstatus`.`last_updated_time`=
-									 	(SELECT MAX(`last_updated_time`)
-									 	FROM `*PREFIX*collaboration_task_status`
-									 	WHERE `tid`=`task`.`tid`)');
+			$sql = self::defaultReadTask();
+			$query = OCP\DB::prepare($sql);
 			$result = $query->execute(array($tid));
 			$row = $result->fetchRow();
 
@@ -875,6 +882,32 @@ class OC_Collaboration_Task
 
 	}
 
+
+  /**
+   * @brief Sort projects that has tasks
+   * @return array of projects strings
+   */
+   public static function sortProjectsTasks()
+   {
+	   try {
+			 $sql= "SELECT DISTINCT oc_collaboration_project.title , oc_collaboration_project.pid
+			   FROM  oc_collaboration_task LEFT JOIN oc_collaboration_project
+           ON oc_collaboration_task.pid =  oc_collaboration_project.pid";
+
+			 $query = OCP\DB::prepare($sql);
+       $result = $query->execute();
+
+			 while($row = $result->fetchRow()) {
+           $rowReturn[] = array ('title' => $row['title'], 'pid' => $row['pid']);
+       }
+		   return $rowReturn;
+
+		 } catch(\Exception $e) {
+
+		   OC_Log::write('collaboration', __METHOD__ . ', Exception: ' . $e->getMessage(), OCP\Util::DEBUG);
+		   return false;
+	   }
+   }
 }
 
 // Instantiated to load the class

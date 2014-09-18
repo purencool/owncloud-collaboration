@@ -40,20 +40,23 @@ $args = array(
 	'assigned_by'=>NULL,
 	'assigned_to'=>NULL);
 
-if(isset($_GET['project']) && $_GET['project'] != 'ALL')
+if(isset($_GET['taskps']) && $_GET['taskps'] != 'ALL')
 {
-	if(!OC_Collaboration_Project::isMemberWorkingOnProjectByTitle(OC_User::getUser(), $_GET['project']))
-	{
-		header('Location: ' . \OCP\Util::linkToRoute('collaboration_route', array('rel_path'=>'dashboard')));
-		throw new Exception(OC_User::getUser() . ' is trying to access project ' . $_GET['project']);
-		exit();
-	}
-	else
-	{
-		$tpl->assign('project', $_GET['project']);
-		$args['project'] = $_GET['project'];
-	}
+
+
+	//if(!OC_Collaboration_Project::isMemberWorkingOnProjectByTitle(OC_User::getUser(), $_GET['taskps']))
+//	{
+	//	header('Location: ' . \OCP\Util::linkToRoute('collaboration_route', array('rel_path'=>'dashboard')));
+		//throw new Exception(OC_User::getUser() . ' is trying to access project ' . $_GET['taskps']);
+	//	exit();
+//	}
+//	else
+//	{
+		$tpl->assign('tasks_by_project', $_GET['taskps']);
+		$args['tasks_by_project'] = $_GET['taskps'];
+//	}
 }
+
 
 if(isset($_GET['status']) && $_GET['status'] != 'ALL')
 {
@@ -79,6 +82,7 @@ if(isset($_GET['assigned_to']))
 }
 
 $tpl->assign('tasks', OC_Collaboration_Task::readTasks($args));
+$tpl->assign('project_select', OC_Collaboration_Task::sortProjectsTasks());
 
 $tpl->printPage();
 ?>

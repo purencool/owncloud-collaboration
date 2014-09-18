@@ -26,19 +26,20 @@
   <div id="content-header" >
     <h1 id="title" ><?php p($l->t('Tasks')); ?></h1>
     <?php
-      if(!isset($_['tasks']) || count($_['tasks']) === 0 || count($_['tasks'][0]) === 0)	{
+      if(!isset($_['project_select']) || count($_['project_select']) === 0)	{
         print_unescaped('<p>'.$l->t('Sorry, no project is available yet to display.').'</p>');
       }	else {
     ?>
     <form id="search_form" class='ch-right' action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="get" >
-      <select id="search_list" name="project" class="chzen-select" >
+      <select id="search_list" name="taskps" class="chzen-select" >
         <option value="ALL" <?php if(!isset($_['project']) || $_['project'] == 'ALL') { print_unescaped('selected="selected"'); } ?> ><?php p($l->t('Search for tasks by project')); ?></option>
         <?php
-          foreach($_['tasks'] as $each) {
-            print_unescaped('<option value="'.$each["proj_title"].'" >'.$each["proj_title"].'</option>');
+          foreach($_['project_select'] as $each) {
+            print_unescaped('<option value="'.$each['pid'].'" >'.$each['title'].'</option>');
           }
         ?>
       </select>
+      <input type="submit" value="Search">
       <?php } ?>
     </form>
   </div>
