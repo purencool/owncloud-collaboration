@@ -1,4 +1,5 @@
 /*content header */
+
 #title
 {
 	text-align: center;
@@ -30,6 +31,11 @@
 	line-height:1.48em;
 	letter-spacing: 0.0325em;
 	color:#4f4f4f;
+}
+
+#content-body ol,
+#content-body ul {
+  list-style-position: inside;
 }
 
 .unit

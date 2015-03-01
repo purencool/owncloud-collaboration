@@ -22,6 +22,10 @@
     print_unescaped($this->inc('tabs'));
    // print_r($_['tasks']);
 ?>
+  $args['status'] = $_GET['status'];
+  $_GET['assigned_by'] = $_GET['assigned_to'] = 'on';
+  $args['assigned_by'] = OC_User::getUser();
+  $args['assigned_to'] = OC_User::getUser();
 <div id="app-content">
   <div id="content-header" >
     <h1 id="title" ><?php p($l->t('Tasks')); ?></h1>
